@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления конференцией</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 Система управления конференцией</h1>
+        </header>
+
+        <div class="alert alert-success" id="successAlert"></div>
+        <div class="alert alert-error" id="errorAlert"></div>
+
+        <!-- Navigation -->
+        <nav>
+            <button onclick="switchSection('invitations')" class="nav-btn">Рассылка приглашений</button>
+            <button onclick="switchSection('participants')" class="nav-btn">Участники</button>
+            <button onclick="switchSection('fees')" class="nav-btn">Оргвзносы</button>
+            <button onclick="switchSection('reports')" class="nav-btn">Отчеты</button>
+        </nav>
+
+        <!-- Section 1: Invitations -->
+        <div class="content-section active" id="invitations-section">
+            <h2>Рассылка приглашений</h2>
+            <div class="form-group">
+                <label for="inviteDate">Дата рассылки 1-го приглашения:</label>
+                <input type="date" id="inviteDate">
+            </div>
+            <button onclick="searchInvitations()">Найти приглашенных на эту дату</button>
+            
+            <div class="mt-20">
+                <h3>Результаты поиска</h3>
+                <div id="invitationStats" class="stats"></div>
+                <table id="invitationTable" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Ученая степень</th>
+                            <th>Место работы</th>
+                            <th>Город</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invitationBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 2: Add Participants -->
+        <div class="content-section" id="participants-section">
+            <h2>Управление участниками</h2>
+            
+            <h3>Добавить участника с оргвзносом</h3>
+            <form id="participantForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lastName">Фамилия: <span class="required">*</span></label>
+                        <input type="text" id="lastName" placeholder="Введите фамилию" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firstName">Имя: <span class="required">*</span></label>
+                        <input type="text" id="firstName" placeholder="Введите имя" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="patronymic">Отчество:</label>
+                        <input type="text" id="patronymic" placeholder="Введите отчество">
+                    </div>
+                    <div class="form-group">
+                        <label for="degree">Ученая степень:</label>
+                        <input type="text" id="degree" placeholder="Например: к.т.н., д.ф.-м.н.">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="title">Ученое звание:</label>
+                        <input type="text" id="title" placeholder="Например: профессор, доцент">
+                    </div>
+                    <div class="form-group">
+                        <label for="field">Научное направление:</label>
+                        <input type="text" id="field" placeholder="Например: Информатика, Математика">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="organization">Место работы: <span class="required">*</span></label>
+                    <input type="text" id="organization" placeholder="Введите название организации" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="department">Кафедра / отдел:</label>
+                        <input type="text" id="department" placeholder="Введите кафедру или отдел">
+                    </div>
+                    <div class="form-group">
+                        <label for="position">Должность: <span class="required">*</span></label>
+                        <input type="text" id="position" placeholder="Введите должность" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">Город: <span class="required">*</span></label>
+                        <input type="text" id="city" placeholder="Введите город" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Страна: <span class="required">*</span></label>
+                        <input type="text" id="country" placeholder="Введите страну" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="postal">Почтовый индекс:</label>
+                        <input type="text" id="postal" placeholder="Например: 119234">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Адрес:</label>
+                        <input type="text" id="address" placeholder="Введите полный адрес">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="workPhone">Рабочий телефон:</label>
+                        <input type="text" id="workPhone" placeholder="Например: +7-495-123-45-67">
+                    </div>
+                    <div class="form-group">
+                        <label for="homePhone">Домашний телефон:</label>
+                        <input type="text" id="homePhone" placeholder="Например: +7-495-123-45-68">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email: <span class="required">*</span></label>
+                    <input type="email" id="email" placeholder="example@mail.ru" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="topic">Тема доклада:</label>
+                    <textarea id="topic" placeholder="Введите тему доклада"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="role">Участие: <span class="required">*</span></label>
+                        <select id="role" required>
+                            <option value="">Выберите...</option>
+                            <option value="speaker">Докладчик</option>
+                            <option value="participant">Участник</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="feeAmount">Оргвзнос (руб.): <span class="required">*</span></label>
+                        <input type="number" id="feeAmount" min="0" placeholder="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="feeDate">Дата уплаты оргвзноса: <span class="required">*</span></label>
+                    <input type="date" id="feeDate" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inviteDate1">Дата рассылки 1-го приглашения:</label>
+                        <input type="date" id="inviteDate1">
+                    </div>
+                    <div class="form-group">
+                        <label for="inviteDate2">Дата рассылки 2-го приглашения:</label>
+                        <input type="date" id="inviteDate2">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="applicationDate">Дата поступления заявки:</label>
+                        <input type="date" id="applicationDate">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="thesis"> Тезисы получены
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="arrivalDate">Дата приезда:</label>
+                        <input type="date" id="arrivalDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="departureDate">Дата отъезда:</label>
+                        <input type="date" id="departureDate">
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="needsHotel"> Нужна гостиница
+                    </label>
+                </div>
+
+                <button type="submit">Добавить участника</button>
+            </form>
+
+            <h3 class="mt-20">Все участники</h3>
+            <table id="participantsTable">
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Место работы</th>
+                        <th>Должность</th>
+                        <th>Тип участия</th>
+                        <th>Email</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="participantsBody"></tbody>
+            </table>
+        </div>
+
+        <!-- Section 3: Fees -->
+        <div class="content-section" id="fees-section">
+            <h2>Управление оргвзносами</h2>
+
+            <h3>Участники с подтвержденными оргвзносами</h3>
+            <table id="feesConfirmedTable">
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Сумма (руб.)</th>
+                        <th>Дата уплаты</th>
+                        <th>Тип участия</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody id="feesConfirmedBody"></tbody>
+            </table>
+
+            <h3 class="mt-20">Поиск оргвзносов по периоду</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="feeStartDate">Дата начала:</label>
+                    <input type="date" id="feeStartDate">
+                </div>
+                <div class="form-group">
+                    <label for="feeEndDate">Дата окончания:</label>
+                    <input type="date" id="feeEndDate">
+                </div>
+            </div>
+            <button onclick="searchFeesByPeriod()">Найти платежи за период</button>
+
+            <div id="feesPeriodResults" class="mt-20">
+                <table id="feesPeriodTable" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Город</th>
+                            <th>Сумма (руб.)</th>
+                            <th>Дата уплаты</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feesPeriodBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 4: Reports -->
+        <div class="content-section" id="reports-section">
+            <h2>Отчеты</h2>
+
+            <h3>Тезисы докладов по городам</h3>
+            <div class="form-group">
+                <label for="reportCity">Выберите город:</label>
+                <select id="reportCity">
+                    <option value="">Все города</option>
+                </select>
+            </div>
+            <button onclick="generateCityReport()">Показать тезисы</button>
+
+            <div id="cityReportResults" class="mt-20">
+                <table id="cityReportTable" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Город</th>
+                            <th>Организация</th>
+                            <th>Тема доклада</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cityReportBody"></tbody>
+                </table>
+            </div>
+
+            <h3 class="mt-20">Запросы на проживание по городам</h3>
+            <div class="form-group">
+                <label for="hotelCity">Выберите город:</label>
+                <select id="hotelCity">
+                    <option value="">Все города</option>
+                </select>
+            </div>
+            <button onclick="generateHotelReport()">Показать запросы</button>
+
+            <div id="hotelReportResults" class="mt-20">
+                <table id="hotelReportTable" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>ФИО</th>
+                            <th>Город</th>
+                            <th>Организация</th>
+                            <th>Контакт</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hotelReportBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="modal" id="participantModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Карточка участника</h2>
+                    <button class="close-btn" onclick="toggleParticipantModal(false)">&times;</button>
+                </div>
+                <div id="participantDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database (in-memory)
+        let database = {
+            participants: JSON.parse(localStorage.getItem('participants')) || [
+                {
+                    id: 1,
+                    lastName: 'Иванов',
+                    firstName: 'Иван',
+                    patronymic: 'Иванович',
+                    degree: 'д.т.н.',
+                    title: 'профессор',
+                    field: 'Информатика',
+                    organization: 'МГУ',
+                    department: 'ИМ',
+                    position: 'профессор',
+                    country: 'Россия',
+                    city: 'Москва',
+                    postal: '119234',
+                    address: 'Ленинские горы, 1',
+                    workPhone: '+7-495-123-45-67',
+                    homePhone: '+7-495-123-45-68',
+                    email: 'ivanov@msu.ru',
+                    role: 'speaker',
+                    topic: 'Искусственный интеллект в современной науке',
+                    inviteDate1: '2024-01-15',
+                    applicationDate: '2024-02-01',
+                    thesis: true,
+                    inviteDate2: '2024-02-10',
+                    feeAmount: 5000,
+                    feeDate: '2024-02-15',
+                    arrivalDate: '2024-03-01',
+                    departureDate: '2024-03-03',
+                    needsHotel: true
+                },
+                {
+                    id: 2,
+                    lastName: 'Петров',
+                    firstName: 'Петр',
+                    patronymic: 'Петрович',
+                    degree: 'к.ф.-м.н.',
+                    title: 'доцент',
+                    field: 'Математика',
+                    organization: 'СПбГУ',
+                    department: 'ММ',
+                    position: 'доцент',
+                    country: 'Россия',
+                    city: 'Санкт-Петербург',
+                    postal: '199034',
+                    address: 'Университетская наб., 7-9',
+                    workPhone: '+7-812-123-45-67',
+                    homePhone: '+7-812-123-45-68',
+                    email: 'petrov@spbu.ru',
+                    role: 'participant',
+                    topic: 'Методы численного анализа',
+                    inviteDate1: '2024-01-15',
+                    applicationDate: '2024-02-05',
+                    thesis: true,
+                    inviteDate2: '2024-02-10',
+                    feeAmount: 3000,
+                    feeDate: '2024-02-20',
+                    arrivalDate: '2024-03-01',
+                    departureDate: '2024-03-02',
+                    needsHotel: false
+                }
+            ]
+        };
+
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 3000);
+        }
+
+        function setVisibility(element, shouldShow) {
+            if (!element) return;
+            element.classList.toggle('hidden', !shouldShow);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) {
+                return '—';
+            }
+            return date.toLocaleDateString('ru-RU');
+        }
+
+        function isFutureDate(dateString) {
+            const date = new Date(dateString);
+            if (Number.isNaN(date.getTime())) {
+                return false;
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
+            return date > today;
+        }
+
+        function switchSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            // Show selected section
+            document.getElementById(section + '-section').classList.add('active');
+            
+            // Update table displays
+            if (section === 'participants') {
+                updateParticipantsTable();
+            } else if (section === 'fees') {
+                updateFeesTable();
+                updateCitySelects();
+            } else if (section === 'reports') {
+                updateReportSelects();
+            }
+        }
+
+        function searchInvitations() {
+            const date = document.getElementById('inviteDate').value;
+            if (!date) {
+                showAlert('Пожалуйста, выберите дату', 'error');
+                return;
+            }
+
+            const invited = database.participants.filter(p => p.inviteDate1 === date);
+            
+            const statsDiv = document.getElementById('invitationStats');
+            statsDiv.innerHTML = `<div class="stat-card"><h3>Приглашено участников</h3><div class="value">${invited.length}</div></div>`;
+
+            if (invited.length > 0) {
+                const tbody = document.getElementById('invitationBody');
+                tbody.innerHTML = invited.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName} ${p.patronymic}</td>
+                        <td>${p.degree}</td>
+                        <td>${p.organization}</td>
+                        <td>${p.city}</td>
+                        <td>${p.email}</td>
+                    </tr>
+                `).join('');
+                setVisibility(document.getElementById('invitationTable'), true);
+            } else {
+                setVisibility(document.getElementById('invitationTable'), false);
+                statsDiv.innerHTML += '<p>Приглашений на эту дату не найдено</p>';
+            }
+        }
+
+        function updateParticipantsTable() {
+            const tbody = document.getElementById('participantsBody');
+            tbody.innerHTML = database.participants.map(p => `
+                <tr>
+                    <td>${p.lastName} ${p.firstName}</td>
+                    <td>${p.organization}</td>
+                    <td>${p.position}</td>
+                    <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
+                    <td>${p.email}</td>
+                    <td><button class="small secondary" onclick="showParticipantDetails(${p.id})">Подробнее</button></td>
+                </tr>
+            `).join('');
+
+            // Update city selects
+            updateCitySelects();
+        }
+
+        function toggleParticipantModal(show) {
+            const modal = document.getElementById('participantModal');
+            if (show) {
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        function showParticipantDetails(id) {
+            const participant = database.participants.find(p => p.id === id);
+            if (!participant) return;
+
+            const details = [
+                ['ФИО', `${participant.lastName} ${participant.firstName} ${participant.patronymic || ''}`.trim()],
+                ['Ученая степень', participant.degree || '—'],
+                ['Ученое звание', participant.title || '—'],
+                ['Научное направление', participant.field || '—'],
+                ['Место работы', participant.organization || '—'],
+                ['Кафедра / отдел', participant.department || '—'],
+                ['Должность', participant.position || '—'],
+                ['Страна / город', `${participant.country || '—'} / ${participant.city || '—'}`],
+                ['Почтовый индекс', participant.postal || '—'],
+                ['Адрес', participant.address || '—'],
+                ['Рабочий телефон', participant.workPhone || '—'],
+                ['Домашний телефон', participant.homePhone || '—'],
+                ['Email', participant.email || '—'],
+                ['Тип участия', participant.role === 'speaker' ? 'Докладчик' : 'Участник'],
+                ['Тема доклада', participant.topic || '—'],
+                ['Дата 1-го приглашения', participant.inviteDate1 || '—'],
+                ['Дата 2-го приглашения', participant.inviteDate2 || '—'],
+                ['Дата заявки', participant.applicationDate || '—'],
+                ['Тезисы получены', participant.thesis ? 'Да' : 'Нет'],
+                ['Оргвзнос (руб.)', participant.feeAmount ? participant.feeAmount.toLocaleString('ru-RU') : '—'],
+                ['Дата уплаты оргвзноса', participant.feeDate || '—'],
+                ['Дата приезда', participant.arrivalDate || '—'],
+                ['Дата отъезда', participant.departureDate || '—'],
+                ['Потребность в гостинице', participant.needsHotel ? 'Нужна' : 'Не нужна']
+            ];
+
+            document.getElementById('participantDetails').innerHTML = `
+                ${details.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join('')}
+            `;
+
+            toggleParticipantModal(true);
+        }
+
+        function updateCitySelects() {
+            const cities = [...new Set(database.participants.map(p => p.city))].sort();
+            ['reportCity', 'hotelCity', 'feeCity'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    const current = select.value;
+                    select.innerHTML = '<option value="">Все города</option>' + 
+                        cities.map(c => `<option value="${c}">${c}</option>`).join('');
+                    select.value = current;
+                }
+            });
+        }
+
+        function updateReportSelects() {
+            updateCitySelects();
+        }
+
+        document.getElementById('participantForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const newParticipant = {
+                id: Math.max(...database.participants.map(p => p.id), 0) + 1,
+                lastName: document.getElementById('lastName').value,
+                firstName: document.getElementById('firstName').value,
+                patronymic: document.getElementById('patronymic').value,
+                degree: document.getElementById('degree').value,
+                title: document.getElementById('title').value,
+                field: document.getElementById('field').value,
+                organization: document.getElementById('organization').value,
+                department: document.getElementById('department').value,
+                position: document.getElementById('position').value,
+                country: document.getElementById('country').value,
+                city: document.getElementById('city').value,
+                postal: document.getElementById('postal').value,
+                address: document.getElementById('address').value,
+                workPhone: document.getElementById('workPhone').value,
+                homePhone: document.getElementById('homePhone').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value,
+                topic: document.getElementById('topic').value,
+                inviteDate1: document.getElementById('inviteDate1').value || new Date().toISOString().split('T')[0],
+                applicationDate: document.getElementById('applicationDate').value || new Date().toISOString().split('T')[0],
+                thesis: document.getElementById('thesis').checked,
+                inviteDate2: document.getElementById('inviteDate2').value,
+                feeAmount: parseFloat(document.getElementById('feeAmount').value),
+                feeDate: document.getElementById('feeDate').value,
+                arrivalDate: document.getElementById('arrivalDate').value,
+                departureDate: document.getElementById('departureDate').value,
+                needsHotel: document.getElementById('needsHotel').checked
+            };
+
+            database.participants.push(newParticipant);
+            localStorage.setItem('participants', JSON.stringify(database.participants));
+            
+            this.reset();
+            updateParticipantsTable();
+            showAlert('Участник успешно добавлен');
+        });
+
+        function updateFeesTable() {
+            const tbody = document.getElementById('feesConfirmedBody');
+            const withFees = database.participants.filter(p => p.feeAmount > 0);
+            
+            tbody.innerHTML = withFees.map(p => {
+                const pending = isFutureDate(p.feeDate);
+                const statusClass = pending ? 'status-pending' : 'status-confirmed';
+                const statusLabel = pending ? 'В ожидании' : '✓ Оплачено';
+
+                return `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
+                        <td>${formatDate(p.feeDate)}</td>
+                        <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function searchFeesByPeriod() {
+            const startDate = document.getElementById('feeStartDate').value;
+            const endDate = document.getElementById('feeEndDate').value;
+
+            if (!startDate || !endDate) {
+                showAlert('Пожалуйста, выберите период', 'error');
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            const filtered = database.participants.filter(p => {
+                const feeDate = new Date(p.feeDate);
+                return feeDate >= start && feeDate <= end && p.feeAmount > 0;
+            });
+
+            const table = document.getElementById('feesPeriodTable');
+            const tbody = document.getElementById('feesPeriodBody');
+
+            if (filtered.length > 0) {
+                tbody.innerHTML = filtered.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.city}</td>
+                        <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
+                        <td>${formatDate(p.feeDate)}</td>
+                    </tr>
+                `).join('');
+                setVisibility(table, true);
+            } else {
+                setVisibility(table, false);
+                showAlert('Платежей в указанном периоде не найдено', 'error');
+            }
+        }
+
+        function generateCityReport() {
+            const city = document.getElementById('reportCity').value;
+            
+            const filtered = database.participants.filter(p => 
+                (!city || p.city === city) && p.topic && p.role === 'speaker'
+            );
+
+            const table = document.getElementById('cityReportTable');
+            const tbody = document.getElementById('cityReportBody');
+
+            if (filtered.length > 0) {
+                tbody.innerHTML = filtered.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.city}</td>
+                        <td>${p.organization}</td>
+                        <td>${p.topic}</td>
+                    </tr>
+                `).join('');
+                setVisibility(table, true);
+            } else {
+                setVisibility(table, false);
+                showAlert('Тезисов не найдено', 'error');
+            }
+        }
+
+        function generateHotelReport() {
+            const city = document.getElementById('hotelCity').value;
+            
+            const filtered = database.participants.filter(p => 
+                (!city || p.city === city) && p.needsHotel
+            );
+
+            const table = document.getElementById('hotelReportTable');
+            const tbody = document.getElementById('hotelReportBody');
+
+            if (filtered.length > 0) {
+                tbody.innerHTML = filtered.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.city}</td>
+                        <td>${p.organization}</td>
+                        <td>${p.email}</td>
+                    </tr>
+                `).join('');
+                setVisibility(table, true);
+            } else {
+                setVisibility(table, false);
+                showAlert('Запросов на проживание не найдено', 'error');
+            }
+        }
+
+        // Закрытие модалки по клику вне содержимого
+        document.getElementById('participantModal').addEventListener('click', (event) => {
+            if (event.target.id === 'participantModal') {
+                toggleParticipantModal(false);
+            }
+        });
+
+        // Initial display
+        updateParticipantsTable();
+    </script>
+</body>
+</html>
