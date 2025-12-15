@@ -18,6 +18,10 @@ instance/
 *.sqlite
 *.sqlite3
 
+# Logs
+*.log
+app.log
+
 # IDE
 .vscode/
 .idea/

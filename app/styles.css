@@ -278,6 +278,11 @@ button.small {
 
 button.danger {
     background: var(--color-error);
+    color: white;
+}
+
+button.danger:hover {
+    opacity: 0.9;
 }
 
 .mt-20 {

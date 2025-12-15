@@ -191,6 +191,11 @@
                     </div>
                 </div>
 
+                <div class="form-group" id="thesisTextGroup" style="display: none;">
+                    <label for="thesisText">Текст тезисов:</label>
+                    <textarea id="thesisText" placeholder="Введите текст тезисов"></textarea>
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="arrivalDate">Дата приезда:</label>
@@ -220,7 +225,7 @@
                         <th>Должность</th>
                         <th>Тип участия</th>
                         <th>Email</th>
-                        <th></th>
+                        <th>Действия</th>
                     </tr>
                 </thead>
                 <tbody id="participantsBody"></tbody>
@@ -294,6 +299,7 @@
                             <th>Город</th>
                             <th>Организация</th>
                             <th>Тема доклада</th>
+                            <th>Тезисы</th>
                         </tr>
                     </thead>
                     <tbody id="cityReportBody"></tbody>
@@ -331,6 +337,24 @@
                     <button class="close-btn" onclick="toggleParticipantModal(false)">&times;</button>
                 </div>
                 <div id="participantDetails"></div>
+            </div>
+        </div>
+
+        <div class="modal" id="editParticipantModal">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2>Редактировать участника</h2>
+                    <button class="close-btn" onclick="toggleEditParticipantModal(false)">&times;</button>
+                </div>
+                <form id="editParticipantForm">
+                    <input type="hidden" id="editParticipantId">
+                    <!-- Форма будет заполнена динамически через JavaScript -->
+                    <div id="editFormContent"></div>
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit">Сохранить изменения</button>
+                        <button type="button" class="secondary" onclick="toggleEditParticipantModal(false)">Отмена</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -447,7 +471,13 @@
                         <td>${p.position}</td>
                         <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
                         <td>${p.email}</td>
-                        <td><button class="small secondary" onclick="showParticipantDetails(${p.id})">Подробнее</button></td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="small secondary" onclick="showParticipantDetails(${p.id})">Подробнее</button>
+                                <button class="small" onclick="editParticipant(${p.id})">Редактировать</button>
+                                <button class="small danger" onclick="deleteParticipant(${p.id})">Удалить</button>
+                            </div>
+                        </td>
                     </tr>
                 `).join('');
 
@@ -495,6 +525,7 @@
                     ['Дата 2-го приглашения', participant.inviteDate2 || '—'],
                     ['Дата заявки', participant.applicationDate || '—'],
                     ['Тезисы получены', participant.thesis ? 'Да' : 'Нет'],
+                    ['Текст тезисов', participant.thesisText || '—'],
                     ['Оргвзнос (руб.)', participant.feeAmount ? participant.feeAmount.toLocaleString('ru-RU') : '—'],
                     ['Дата уплаты оргвзноса', participant.feeDate || '—'],
                     ['Дата приезда', participant.arrivalDate || '—'],
@@ -562,6 +593,7 @@
                 inviteDate1: document.getElementById('inviteDate1').value || new Date().toISOString().split('T')[0],
                 applicationDate: document.getElementById('applicationDate').value || new Date().toISOString().split('T')[0],
                 thesis: document.getElementById('thesis').checked,
+                thesisText: document.getElementById('thesisText').value,
                 inviteDate2: document.getElementById('inviteDate2').value,
                 feeAmount: parseFloat(document.getElementById('feeAmount').value),
                 feeDate: document.getElementById('feeDate').value,
@@ -569,6 +601,13 @@
                 departureDate: document.getElementById('departureDate').value,
                 needsHotel: document.getElementById('needsHotel').checked
             };
+
+            // Валидация дат на клиенте
+            const dateErrors = validateDatesClient(newParticipant);
+            if (dateErrors.length > 0) {
+                showAlert(dateErrors.join('; '), 'error');
+                return;
+            }
 
             try {
                 const response = await fetch(`${API_BASE}/participants`, {
@@ -694,6 +733,7 @@
                             <td>${p.city}</td>
                             <td>${p.organization}</td>
                             <td>${p.topic || '—'}</td>
+                            <td>${p.thesisText || '—'}</td>
                         </tr>
                     `).join('');
                     setVisibility(table, true);
@@ -747,10 +787,280 @@
             }
         }
 
-        // Закрытие модалки по клику вне содержимого
+        function validateDatesClient(data) {
+            const errors = [];
+            
+            if (data.inviteDate1 && data.inviteDate2 && data.inviteDate2 < data.inviteDate1) {
+                errors.push('Дата 2-го приглашения должна быть не раньше даты 1-го приглашения');
+            }
+            
+            if (data.arrivalDate && data.departureDate && data.departureDate < data.arrivalDate) {
+                errors.push('Дата отъезда должна быть не раньше даты приезда');
+            }
+            
+            if (data.inviteDate1 && data.applicationDate && data.applicationDate < data.inviteDate1) {
+                errors.push('Дата поступления заявки должна быть не раньше даты 1-го приглашения');
+            }
+            
+            return errors;
+        }
+
+        function toggleEditParticipantModal(show) {
+            const modal = document.getElementById('editParticipantModal');
+            if (show) {
+                modal.classList.add('active');
+            } else {
+                modal.classList.remove('active');
+            }
+        }
+
+        async function editParticipant(id) {
+            try {
+                const response = await fetch(`${API_BASE}/participants/${id}`);
+                if (!response.ok) throw new Error('Участник не найден');
+                
+                const participant = await response.json();
+                
+                // Заполняем форму редактирования
+                document.getElementById('editParticipantId').value = participant.id;
+                const formContent = document.getElementById('editFormContent');
+                
+                // Создаем форму редактирования (копия основной формы)
+                formContent.innerHTML = `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editLastName">Фамилия: <span class="required">*</span></label>
+                            <input type="text" id="editLastName" value="${participant.lastName}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFirstName">Имя: <span class="required">*</span></label>
+                            <input type="text" id="editFirstName" value="${participant.firstName}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPatronymic">Отчество:</label>
+                            <input type="text" id="editPatronymic" value="${participant.patronymic || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDegree">Ученая степень:</label>
+                            <input type="text" id="editDegree" value="${participant.degree || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editTitle">Ученое звание:</label>
+                            <input type="text" id="editTitle" value="${participant.title || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editField">Научное направление:</label>
+                            <input type="text" id="editField" value="${participant.field || ''}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editOrganization">Место работы: <span class="required">*</span></label>
+                        <input type="text" id="editOrganization" value="${participant.organization}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDepartment">Кафедра / отдел:</label>
+                            <input type="text" id="editDepartment" value="${participant.department || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editPosition">Должность: <span class="required">*</span></label>
+                            <input type="text" id="editPosition" value="${participant.position}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCity">Город: <span class="required">*</span></label>
+                            <input type="text" id="editCity" value="${participant.city}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCountry">Страна: <span class="required">*</span></label>
+                            <input type="text" id="editCountry" value="${participant.country}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Email: <span class="required">*</span></label>
+                        <input type="email" id="editEmail" value="${participant.email}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editTopic">Тема доклада:</label>
+                        <textarea id="editTopic">${participant.topic || ''}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editRole">Участие: <span class="required">*</span></label>
+                            <select id="editRole" required>
+                                <option value="">Выберите...</option>
+                                <option value="speaker" ${participant.role === 'speaker' ? 'selected' : ''}>Докладчик</option>
+                                <option value="participant" ${participant.role === 'participant' ? 'selected' : ''}>Участник</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFeeAmount">Оргвзнос (руб.): <span class="required">*</span></label>
+                            <input type="number" id="editFeeAmount" min="0" value="${participant.feeAmount}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editFeeDate">Дата уплаты оргвзноса: <span class="required">*</span></label>
+                        <input type="date" id="editFeeDate" value="${participant.feeDate}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editInviteDate1">Дата рассылки 1-го приглашения:</label>
+                            <input type="date" id="editInviteDate1" value="${participant.inviteDate1 || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editInviteDate2">Дата рассылки 2-го приглашения:</label>
+                            <input type="date" id="editInviteDate2" value="${participant.inviteDate2 || ''}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editApplicationDate">Дата поступления заявки:</label>
+                            <input type="date" id="editApplicationDate" value="${participant.applicationDate || ''}">
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="editThesis" ${participant.thesis ? 'checked' : ''}> Тезисы получены
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" id="editThesisTextGroup" style="display: ${participant.thesis ? 'block' : 'none'};">
+                        <label for="editThesisText">Текст тезисов:</label>
+                        <textarea id="editThesisText">${participant.thesisText || ''}</textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editArrivalDate">Дата приезда:</label>
+                            <input type="date" id="editArrivalDate" value="${participant.arrivalDate || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label for="editDepartureDate">Дата отъезда:</label>
+                            <input type="date" id="editDepartureDate" value="${participant.departureDate || ''}">
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="editNeedsHotel" ${participant.needsHotel ? 'checked' : ''}> Нужна гостиница
+                        </label>
+                    </div>
+                `;
+                
+                // Обработчик для чекбокса тезисов
+                document.getElementById('editThesis').addEventListener('change', function() {
+                    document.getElementById('editThesisTextGroup').style.display = this.checked ? 'block' : 'none';
+                });
+                
+                toggleEditParticipantModal(true);
+            } catch (error) {
+                showAlert('Ошибка при загрузке данных участника', 'error');
+                console.error(error);
+            }
+        }
+
+        async function deleteParticipant(id) {
+            if (!confirm('Вы уверены, что хотите удалить этого участника?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/participants/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при удалении участника', 'error');
+                    return;
+                }
+
+                await updateParticipantsTable();
+                showAlert('Участник успешно удален');
+            } catch (error) {
+                showAlert('Ошибка при удалении участника', 'error');
+                console.error(error);
+            }
+        }
+
+        // Обработчик формы редактирования
+        document.getElementById('editParticipantForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editParticipantId').value;
+            const updatedParticipant = {
+                lastName: document.getElementById('editLastName').value,
+                firstName: document.getElementById('editFirstName').value,
+                patronymic: document.getElementById('editPatronymic').value,
+                degree: document.getElementById('editDegree').value,
+                title: document.getElementById('editTitle').value,
+                field: document.getElementById('editField').value,
+                organization: document.getElementById('editOrganization').value,
+                department: document.getElementById('editDepartment').value,
+                position: document.getElementById('editPosition').value,
+                country: document.getElementById('editCountry').value,
+                city: document.getElementById('editCity').value,
+                email: document.getElementById('editEmail').value,
+                role: document.getElementById('editRole').value,
+                topic: document.getElementById('editTopic').value,
+                inviteDate1: document.getElementById('editInviteDate1').value,
+                inviteDate2: document.getElementById('editInviteDate2').value,
+                applicationDate: document.getElementById('editApplicationDate').value,
+                thesis: document.getElementById('editThesis').checked,
+                thesisText: document.getElementById('editThesisText').value,
+                feeAmount: parseFloat(document.getElementById('editFeeAmount').value),
+                feeDate: document.getElementById('editFeeDate').value,
+                arrivalDate: document.getElementById('editArrivalDate').value,
+                departureDate: document.getElementById('editDepartureDate').value,
+                needsHotel: document.getElementById('editNeedsHotel').checked
+            };
+
+            // Валидация дат
+            const dateErrors = validateDatesClient(updatedParticipant);
+            if (dateErrors.length > 0) {
+                showAlert(dateErrors.join('; '), 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/participants/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedParticipant)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при обновлении участника', 'error');
+                    return;
+                }
+
+                toggleEditParticipantModal(false);
+                await updateParticipantsTable();
+                showAlert('Участник успешно обновлен');
+            } catch (error) {
+                showAlert('Ошибка при обновлении участника', 'error');
+                console.error(error);
+            }
+        });
+
+        // Обработчик для чекбокса тезисов в основной форме
+        document.getElementById('thesis').addEventListener('change', function() {
+            document.getElementById('thesisTextGroup').style.display = this.checked ? 'block' : 'none';
+        });
+
+        // Закрытие модалок по клику вне содержимого
         document.getElementById('participantModal').addEventListener('click', (event) => {
             if (event.target.id === 'participantModal') {
                 toggleParticipantModal(false);
+            }
+        });
+
+        document.getElementById('editParticipantModal').addEventListener('click', (event) => {
+            if (event.target.id === 'editParticipantModal') {
+                toggleEditParticipantModal(false);
             }
         });
 
