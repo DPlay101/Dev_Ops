@@ -104,8 +104,58 @@ textarea {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: var(--space-16);
+    }
+    
+    header h1 {
+        font-size: 24px;
+    }
+    
+    nav {
+        flex-direction: column;
+    }
+    
     .form-row {
         grid-template-columns: 1fr;
+    }
+    
+    .content-section {
+        padding: var(--space-16);
+    }
+    
+    table {
+        font-size: 12px;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    th, td {
+        padding: var(--space-8);
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: var(--space-16);
+        max-height: 95vh;
+    }
+    
+    .stats {
+        grid-template-columns: 1fr;
+    }
+    
+    button {
+        width: 100%;
+        margin-bottom: var(--space-8);
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons button {
+        width: 100%;
     }
 }
 

@@ -141,7 +141,9 @@ def create_participant():
 def get_participant(participant_id):
     """Получить участника по ID"""
     try:
-        participant = Participant.query.get_or_404(participant_id)
+        participant = Participant.query.get(participant_id)
+        if not participant:
+            return jsonify({'error': 'Участник не найден'}), 404
         return jsonify(participant.to_dict())
     except Exception as e:
         logger.error(f'Ошибка при получении участника {participant_id}: {str(e)}', exc_info=True)
@@ -152,7 +154,9 @@ def get_participant(participant_id):
 def update_participant(participant_id):
     """Обновить участника"""
     try:
-        participant = Participant.query.get_or_404(participant_id)
+        participant = Participant.query.get(participant_id)
+        if not participant:
+            return jsonify({'error': 'Участник не найден'}), 404
         data = request.json
         
         # Валидация обязательных полей
@@ -225,7 +229,9 @@ def update_participant(participant_id):
 def delete_participant(participant_id):
     """Удалить участника"""
     try:
-        participant = Participant.query.get_or_404(participant_id)
+        participant = Participant.query.get(participant_id)
+        if not participant:
+            return jsonify({'error': 'Участник не найден'}), 404
         email = participant.email
         
         db.session.delete(participant)
