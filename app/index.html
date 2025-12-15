@@ -336,71 +336,8 @@
     </div>
 
     <script>
-        // Database (in-memory)
-        let database = {
-            participants: JSON.parse(localStorage.getItem('participants')) || [
-                {
-                    id: 1,
-                    lastName: 'Иванов',
-                    firstName: 'Иван',
-                    patronymic: 'Иванович',
-                    degree: 'д.т.н.',
-                    title: 'профессор',
-                    field: 'Информатика',
-                    organization: 'МГУ',
-                    department: 'ИМ',
-                    position: 'профессор',
-                    country: 'Россия',
-                    city: 'Москва',
-                    postal: '119234',
-                    address: 'Ленинские горы, 1',
-                    workPhone: '+7-495-123-45-67',
-                    homePhone: '+7-495-123-45-68',
-                    email: 'ivanov@msu.ru',
-                    role: 'speaker',
-                    topic: 'Искусственный интеллект в современной науке',
-                    inviteDate1: '2024-01-15',
-                    applicationDate: '2024-02-01',
-                    thesis: true,
-                    inviteDate2: '2024-02-10',
-                    feeAmount: 5000,
-                    feeDate: '2024-02-15',
-                    arrivalDate: '2024-03-01',
-                    departureDate: '2024-03-03',
-                    needsHotel: true
-                },
-                {
-                    id: 2,
-                    lastName: 'Петров',
-                    firstName: 'Петр',
-                    patronymic: 'Петрович',
-                    degree: 'к.ф.-м.н.',
-                    title: 'доцент',
-                    field: 'Математика',
-                    organization: 'СПбГУ',
-                    department: 'ММ',
-                    position: 'доцент',
-                    country: 'Россия',
-                    city: 'Санкт-Петербург',
-                    postal: '199034',
-                    address: 'Университетская наб., 7-9',
-                    workPhone: '+7-812-123-45-67',
-                    homePhone: '+7-812-123-45-68',
-                    email: 'petrov@spbu.ru',
-                    role: 'participant',
-                    topic: 'Методы численного анализа',
-                    inviteDate1: '2024-01-15',
-                    applicationDate: '2024-02-05',
-                    thesis: true,
-                    inviteDate2: '2024-02-10',
-                    feeAmount: 3000,
-                    feeDate: '2024-02-20',
-                    arrivalDate: '2024-03-01',
-                    departureDate: '2024-03-02',
-                    needsHotel: false
-                }
-            ]
-        };
+        // API Base URL
+        const API_BASE = '/api';
 
         function showAlert(message, type = 'success') {
             const alert = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
@@ -433,7 +370,7 @@
             return date > today;
         }
 
-        function switchSection(section) {
+        async function switchSection(section) {
             // Hide all sections
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             // Show selected section
@@ -441,60 +378,85 @@
             
             // Update table displays
             if (section === 'participants') {
-                updateParticipantsTable();
+                await updateParticipantsTable();
             } else if (section === 'fees') {
-                updateFeesTable();
-                updateCitySelects();
+                await updateFeesTable();
+                await updateCitySelects();
             } else if (section === 'reports') {
-                updateReportSelects();
+                await updateReportSelects();
             }
         }
 
-        function searchInvitations() {
+        async function searchInvitations() {
             const date = document.getElementById('inviteDate').value;
             if (!date) {
                 showAlert('Пожалуйста, выберите дату', 'error');
                 return;
             }
 
-            const invited = database.participants.filter(p => p.inviteDate1 === date);
-            
-            const statsDiv = document.getElementById('invitationStats');
-            statsDiv.innerHTML = `<div class="stat-card"><h3>Приглашено участников</h3><div class="value">${invited.length}</div></div>`;
+            try {
+                const response = await fetch(`${API_BASE}/invitations/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при поиске', 'error');
+                    return;
+                }
 
-            if (invited.length > 0) {
-                const tbody = document.getElementById('invitationBody');
-                tbody.innerHTML = invited.map(p => `
-                    <tr>
-                        <td>${p.lastName} ${p.firstName} ${p.patronymic}</td>
-                        <td>${p.degree}</td>
-                        <td>${p.organization}</td>
-                        <td>${p.city}</td>
-                        <td>${p.email}</td>
-                    </tr>
-                `).join('');
-                setVisibility(document.getElementById('invitationTable'), true);
-            } else {
-                setVisibility(document.getElementById('invitationTable'), false);
-                statsDiv.innerHTML += '<p>Приглашений на эту дату не найдено</p>';
+                const invited = await response.json();
+                const statsDiv = document.getElementById('invitationStats');
+                statsDiv.innerHTML = `<div class="stat-card"><h3>Приглашено участников</h3><div class="value">${invited.length}</div></div>`;
+
+                if (invited.length > 0) {
+                    const tbody = document.getElementById('invitationBody');
+                    tbody.innerHTML = invited.map(p => `
+                        <tr>
+                            <td>${p.lastName} ${p.firstName} ${p.patronymic || ''}</td>
+                            <td>${p.degree || '—'}</td>
+                            <td>${p.organization}</td>
+                            <td>${p.city}</td>
+                            <td>${p.email}</td>
+                        </tr>
+                    `).join('');
+                    setVisibility(document.getElementById('invitationTable'), true);
+                } else {
+                    setVisibility(document.getElementById('invitationTable'), false);
+                    statsDiv.innerHTML += '<p>Приглашений на эту дату не найдено</p>';
+                }
+            } catch (error) {
+                showAlert('Ошибка при загрузке данных', 'error');
+                console.error(error);
             }
         }
 
-        function updateParticipantsTable() {
-            const tbody = document.getElementById('participantsBody');
-            tbody.innerHTML = database.participants.map(p => `
-                <tr>
-                    <td>${p.lastName} ${p.firstName}</td>
-                    <td>${p.organization}</td>
-                    <td>${p.position}</td>
-                    <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
-                    <td>${p.email}</td>
-                    <td><button class="small secondary" onclick="showParticipantDetails(${p.id})">Подробнее</button></td>
-                </tr>
-            `).join('');
+        async function updateParticipantsTable() {
+            try {
+                const response = await fetch(`${API_BASE}/participants`);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                
+                const participants = await response.json();
+                const tbody = document.getElementById('participantsBody');
+                tbody.innerHTML = participants.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.organization}</td>
+                        <td>${p.position}</td>
+                        <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
+                        <td>${p.email}</td>
+                        <td><button class="small secondary" onclick="showParticipantDetails(${p.id})">Подробнее</button></td>
+                    </tr>
+                `).join('');
 
-            // Update city selects
-            updateCitySelects();
+                // Update city selects
+                await updateCitySelects();
+            } catch (error) {
+                showAlert('Ошибка при загрузке участников', 'error');
+                console.error(error);
+            }
         }
 
         function toggleParticipantModal(show) {
@@ -506,66 +468,79 @@
             }
         }
 
-        function showParticipantDetails(id) {
-            const participant = database.participants.find(p => p.id === id);
-            if (!participant) return;
+        async function showParticipantDetails(id) {
+            try {
+                const response = await fetch(`${API_BASE}/participants/${id}`);
+                if (!response.ok) throw new Error('Участник не найден');
+                
+                const participant = await response.json();
 
-            const details = [
-                ['ФИО', `${participant.lastName} ${participant.firstName} ${participant.patronymic || ''}`.trim()],
-                ['Ученая степень', participant.degree || '—'],
-                ['Ученое звание', participant.title || '—'],
-                ['Научное направление', participant.field || '—'],
-                ['Место работы', participant.organization || '—'],
-                ['Кафедра / отдел', participant.department || '—'],
-                ['Должность', participant.position || '—'],
-                ['Страна / город', `${participant.country || '—'} / ${participant.city || '—'}`],
-                ['Почтовый индекс', participant.postal || '—'],
-                ['Адрес', participant.address || '—'],
-                ['Рабочий телефон', participant.workPhone || '—'],
-                ['Домашний телефон', participant.homePhone || '—'],
-                ['Email', participant.email || '—'],
-                ['Тип участия', participant.role === 'speaker' ? 'Докладчик' : 'Участник'],
-                ['Тема доклада', participant.topic || '—'],
-                ['Дата 1-го приглашения', participant.inviteDate1 || '—'],
-                ['Дата 2-го приглашения', participant.inviteDate2 || '—'],
-                ['Дата заявки', participant.applicationDate || '—'],
-                ['Тезисы получены', participant.thesis ? 'Да' : 'Нет'],
-                ['Оргвзнос (руб.)', participant.feeAmount ? participant.feeAmount.toLocaleString('ru-RU') : '—'],
-                ['Дата уплаты оргвзноса', participant.feeDate || '—'],
-                ['Дата приезда', participant.arrivalDate || '—'],
-                ['Дата отъезда', participant.departureDate || '—'],
-                ['Потребность в гостинице', participant.needsHotel ? 'Нужна' : 'Не нужна']
-            ];
+                const details = [
+                    ['ФИО', `${participant.lastName} ${participant.firstName} ${participant.patronymic || ''}`.trim()],
+                    ['Ученая степень', participant.degree || '—'],
+                    ['Ученое звание', participant.title || '—'],
+                    ['Научное направление', participant.field || '—'],
+                    ['Место работы', participant.organization || '—'],
+                    ['Кафедра / отдел', participant.department || '—'],
+                    ['Должность', participant.position || '—'],
+                    ['Страна / город', `${participant.country || '—'} / ${participant.city || '—'}`],
+                    ['Почтовый индекс', participant.postal || '—'],
+                    ['Адрес', participant.address || '—'],
+                    ['Рабочий телефон', participant.workPhone || '—'],
+                    ['Домашний телефон', participant.homePhone || '—'],
+                    ['Email', participant.email || '—'],
+                    ['Тип участия', participant.role === 'speaker' ? 'Докладчик' : 'Участник'],
+                    ['Тема доклада', participant.topic || '—'],
+                    ['Дата 1-го приглашения', participant.inviteDate1 || '—'],
+                    ['Дата 2-го приглашения', participant.inviteDate2 || '—'],
+                    ['Дата заявки', participant.applicationDate || '—'],
+                    ['Тезисы получены', participant.thesis ? 'Да' : 'Нет'],
+                    ['Оргвзнос (руб.)', participant.feeAmount ? participant.feeAmount.toLocaleString('ru-RU') : '—'],
+                    ['Дата уплаты оргвзноса', participant.feeDate || '—'],
+                    ['Дата приезда', participant.arrivalDate || '—'],
+                    ['Дата отъезда', participant.departureDate || '—'],
+                    ['Потребность в гостинице', participant.needsHotel ? 'Нужна' : 'Не нужна']
+                ];
 
-            document.getElementById('participantDetails').innerHTML = `
-                ${details.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join('')}
-            `;
+                document.getElementById('participantDetails').innerHTML = `
+                    ${details.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join('')}
+                `;
 
-            toggleParticipantModal(true);
+                toggleParticipantModal(true);
+            } catch (error) {
+                showAlert('Ошибка при загрузке данных участника', 'error');
+                console.error(error);
+            }
         }
 
-        function updateCitySelects() {
-            const cities = [...new Set(database.participants.map(p => p.city))].sort();
-            ['reportCity', 'hotelCity', 'feeCity'].forEach(id => {
-                const select = document.getElementById(id);
-                if (select) {
-                    const current = select.value;
-                    select.innerHTML = '<option value="">Все города</option>' + 
-                        cities.map(c => `<option value="${c}">${c}</option>`).join('');
-                    select.value = current;
-                }
-            });
+        async function updateCitySelects() {
+            try {
+                const response = await fetch(`${API_BASE}/cities`);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                
+                const cities = await response.json();
+                ['reportCity', 'hotelCity', 'feeCity'].forEach(id => {
+                    const select = document.getElementById(id);
+                    if (select) {
+                        const current = select.value;
+                        select.innerHTML = '<option value="">Все города</option>' + 
+                            cities.map(c => `<option value="${c}">${c}</option>`).join('');
+                        select.value = current;
+                    }
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке городов:', error);
+            }
         }
 
-        function updateReportSelects() {
-            updateCitySelects();
+        async function updateReportSelects() {
+            await updateCitySelects();
         }
 
-        document.getElementById('participantForm').addEventListener('submit', function(e) {
+        document.getElementById('participantForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const newParticipant = {
-                id: Math.max(...database.participants.map(p => p.id), 0) + 1,
                 lastName: document.getElementById('lastName').value,
                 firstName: document.getElementById('firstName').value,
                 patronymic: document.getElementById('patronymic').value,
@@ -595,36 +570,58 @@
                 needsHotel: document.getElementById('needsHotel').checked
             };
 
-            database.participants.push(newParticipant);
-            localStorage.setItem('participants', JSON.stringify(database.participants));
-            
-            this.reset();
-            updateParticipantsTable();
-            showAlert('Участник успешно добавлен');
+            try {
+                const response = await fetch(`${API_BASE}/participants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newParticipant)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при добавлении участника', 'error');
+                    return;
+                }
+
+                this.reset();
+                await updateParticipantsTable();
+                showAlert('Участник успешно добавлен');
+            } catch (error) {
+                showAlert('Ошибка при добавлении участника', 'error');
+                console.error(error);
+            }
         });
 
-        function updateFeesTable() {
-            const tbody = document.getElementById('feesConfirmedBody');
-            const withFees = database.participants.filter(p => p.feeAmount > 0);
-            
-            tbody.innerHTML = withFees.map(p => {
-                const pending = isFutureDate(p.feeDate);
-                const statusClass = pending ? 'status-pending' : 'status-confirmed';
-                const statusLabel = pending ? 'В ожидании' : '✓ Оплачено';
+        async function updateFeesTable() {
+            try {
+                const response = await fetch(`${API_BASE}/fees`);
+                if (!response.ok) throw new Error('Ошибка загрузки');
+                
+                const withFees = await response.json();
+                const tbody = document.getElementById('feesConfirmedBody');
+                
+                tbody.innerHTML = withFees.map(p => {
+                    const pending = isFutureDate(p.feeDate);
+                    const statusClass = pending ? 'status-pending' : 'status-confirmed';
+                    const statusLabel = pending ? 'В ожидании' : '✓ Оплачено';
 
-                return `
-                    <tr>
-                        <td>${p.lastName} ${p.firstName}</td>
-                        <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
-                        <td>${formatDate(p.feeDate)}</td>
-                        <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
-                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                    </tr>
-                `;
-            }).join('');
+                    return `
+                        <tr>
+                            <td>${p.lastName} ${p.firstName}</td>
+                            <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
+                            <td>${formatDate(p.feeDate)}</td>
+                            <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                showAlert('Ошибка при загрузке оргвзносов', 'error');
+                console.error(error);
+            }
         }
 
-        function searchFeesByPeriod() {
+        async function searchFeesByPeriod() {
             const startDate = document.getElementById('feeStartDate').value;
             const endDate = document.getElementById('feeEndDate').value;
 
@@ -633,82 +630,120 @@
                 return;
             }
 
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+            try {
+                const response = await fetch(`${API_BASE}/fees/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ startDate, endDate })
+                });
 
-            const filtered = database.participants.filter(p => {
-                const feeDate = new Date(p.feeDate);
-                return feeDate >= start && feeDate <= end && p.feeAmount > 0;
-            });
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при поиске', 'error');
+                    return;
+                }
 
-            const table = document.getElementById('feesPeriodTable');
-            const tbody = document.getElementById('feesPeriodBody');
+                const filtered = await response.json();
+                const table = document.getElementById('feesPeriodTable');
+                const tbody = document.getElementById('feesPeriodBody');
 
-            if (filtered.length > 0) {
-                tbody.innerHTML = filtered.map(p => `
-                    <tr>
-                        <td>${p.lastName} ${p.firstName}</td>
-                        <td>${p.city}</td>
-                        <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
-                        <td>${formatDate(p.feeDate)}</td>
-                    </tr>
-                `).join('');
-                setVisibility(table, true);
-            } else {
-                setVisibility(table, false);
-                showAlert('Платежей в указанном периоде не найдено', 'error');
+                if (filtered.length > 0) {
+                    tbody.innerHTML = filtered.map(p => `
+                        <tr>
+                            <td>${p.lastName} ${p.firstName}</td>
+                            <td>${p.city}</td>
+                            <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
+                            <td>${formatDate(p.feeDate)}</td>
+                        </tr>
+                    `).join('');
+                    setVisibility(table, true);
+                } else {
+                    setVisibility(table, false);
+                    showAlert('Платежей в указанном периоде не найдено', 'error');
+                }
+            } catch (error) {
+                showAlert('Ошибка при поиске платежей', 'error');
+                console.error(error);
             }
         }
 
-        function generateCityReport() {
+        async function generateCityReport() {
             const city = document.getElementById('reportCity').value;
-            
-            const filtered = database.participants.filter(p => 
-                (!city || p.city === city) && p.topic && p.role === 'speaker'
-            );
 
-            const table = document.getElementById('cityReportTable');
-            const tbody = document.getElementById('cityReportBody');
+            try {
+                const response = await fetch(`${API_BASE}/reports/thesis`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city })
+                });
 
-            if (filtered.length > 0) {
-                tbody.innerHTML = filtered.map(p => `
-                    <tr>
-                        <td>${p.lastName} ${p.firstName}</td>
-                        <td>${p.city}</td>
-                        <td>${p.organization}</td>
-                        <td>${p.topic}</td>
-                    </tr>
-                `).join('');
-                setVisibility(table, true);
-            } else {
-                setVisibility(table, false);
-                showAlert('Тезисов не найдено', 'error');
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при генерации отчета', 'error');
+                    return;
+                }
+
+                const filtered = await response.json();
+                const table = document.getElementById('cityReportTable');
+                const tbody = document.getElementById('cityReportBody');
+
+                if (filtered.length > 0) {
+                    tbody.innerHTML = filtered.map(p => `
+                        <tr>
+                            <td>${p.lastName} ${p.firstName}</td>
+                            <td>${p.city}</td>
+                            <td>${p.organization}</td>
+                            <td>${p.topic || '—'}</td>
+                        </tr>
+                    `).join('');
+                    setVisibility(table, true);
+                } else {
+                    setVisibility(table, false);
+                    showAlert('Тезисов не найдено', 'error');
+                }
+            } catch (error) {
+                showAlert('Ошибка при генерации отчета', 'error');
+                console.error(error);
             }
         }
 
-        function generateHotelReport() {
+        async function generateHotelReport() {
             const city = document.getElementById('hotelCity').value;
-            
-            const filtered = database.participants.filter(p => 
-                (!city || p.city === city) && p.needsHotel
-            );
 
-            const table = document.getElementById('hotelReportTable');
-            const tbody = document.getElementById('hotelReportBody');
+            try {
+                const response = await fetch(`${API_BASE}/reports/hotel`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city })
+                });
 
-            if (filtered.length > 0) {
-                tbody.innerHTML = filtered.map(p => `
-                    <tr>
-                        <td>${p.lastName} ${p.firstName}</td>
-                        <td>${p.city}</td>
-                        <td>${p.organization}</td>
-                        <td>${p.email}</td>
-                    </tr>
-                `).join('');
-                setVisibility(table, true);
-            } else {
-                setVisibility(table, false);
-                showAlert('Запросов на проживание не найдено', 'error');
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAlert(error.error || 'Ошибка при генерации отчета', 'error');
+                    return;
+                }
+
+                const filtered = await response.json();
+                const table = document.getElementById('hotelReportTable');
+                const tbody = document.getElementById('hotelReportBody');
+
+                if (filtered.length > 0) {
+                    tbody.innerHTML = filtered.map(p => `
+                        <tr>
+                            <td>${p.lastName} ${p.firstName}</td>
+                            <td>${p.city}</td>
+                            <td>${p.organization}</td>
+                            <td>${p.email}</td>
+                        </tr>
+                    `).join('');
+                    setVisibility(table, true);
+                } else {
+                    setVisibility(table, false);
+                    showAlert('Запросов на проживание не найдено', 'error');
+                }
+            } catch (error) {
+                showAlert('Ошибка при генерации отчета', 'error');
+                console.error(error);
             }
         }
 
