@@ -12,8 +12,16 @@
             <h1>📋 Система управления конференцией</h1>
         </header>
 
-        <div class="alert alert-success" id="successAlert"></div>
-        <div class="alert alert-error" id="errorAlert"></div>
+        <!-- Toast notifications container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Loading overlay -->
+        <div class="loading-overlay hidden" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>Отправка данных...</p>
+            </div>
+        </div>
 
         <!-- Navigation -->
         <nav>
@@ -56,164 +64,216 @@
             
             <h3>Добавить участника с оргвзносом</h3>
             <form id="participantForm">
+                <!-- Табы -->
+                <div class="form-tabs">
+                    <button type="button" class="form-tab active" data-tab="tab1">Основная информация</button>
+                    <button type="button" class="form-tab" data-tab="tab2">Дополнительно</button>
+                    <button type="button" class="form-tab" data-tab="tab3">Контакты</button>
+                    <button type="button" class="form-tab" data-tab="tab4">Приглашение и Участие</button>
+                    <button type="button" class="form-tab" data-tab="tab5">Финансы и Логистика</button>
+                </div>
+
+                <!-- TAB 1: Основная информация -->
+                <div class="form-tab-content active" id="tab1">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="lastName">Фамилия: <span class="required">*</span></label>
-                        <input type="text" id="lastName" placeholder="Введите фамилию" required>
+                            <label for="lastName">Фамилия: <span class="required">*</span></label>
+                            <input type="text" id="lastName" placeholder="Введите фамилию" required>
                     </div>
                     <div class="form-group">
-                        <label for="firstName">Имя: <span class="required">*</span></label>
-                        <input type="text" id="firstName" placeholder="Введите имя" required>
+                            <label for="firstName">Имя: <span class="required">*</span></label>
+                            <input type="text" id="firstName" placeholder="Введите имя" required>
                     </div>
                 </div>
 
-                <div class="form-row">
                     <div class="form-group">
                         <label for="patronymic">Отчество:</label>
                         <input type="text" id="patronymic" placeholder="Введите отчество">
                     </div>
+
                     <div class="form-group">
-                        <label for="degree">Ученая степень:</label>
-                        <input type="text" id="degree" placeholder="Например: к.т.н., д.ф.-м.н.">
-                    </div>
+                        <label for="email">Email: <span class="required">*</span></label>
+                        <input type="email" id="email" placeholder="example@mail.ru" required>
                 </div>
 
-                <div class="form-row">
                     <div class="form-group">
-                        <label for="title">Ученое звание:</label>
-                        <input type="text" id="title" placeholder="Например: профессор, доцент">
+                        <label for="organization">Организация: <span class="required">*</span></label>
+                        <input type="text" id="organization" placeholder="Введите название организации" required>
                     </div>
-                    <div class="form-group">
-                        <label for="field">Научное направление:</label>
-                        <input type="text" id="field" placeholder="Например: Информатика, Математика">
-                    </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="organization">Место работы: <span class="required">*</span></label>
-                    <input type="text" id="organization" placeholder="Введите название организации" required>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="department">Кафедра / отдел:</label>
-                        <input type="text" id="department" placeholder="Введите кафедру или отдел">
-                    </div>
                     <div class="form-group">
                         <label for="position">Должность: <span class="required">*</span></label>
                         <input type="text" id="position" placeholder="Введите должность" required>
                     </div>
                 </div>
 
-                <div class="form-row">
+                <!-- TAB 2: Дополнительно -->
+                <div class="form-tab-content" id="tab2">
+                <div class="form-group">
+                        <label for="degree">Ученая степень:</label>
+                        <select id="degree">
+                            <option value="">Нет</option>
+                            <option value="к.н.">к.н.</option>
+                            <option value="д.н.">д.н.</option>
+                            <option value="к.т.н.">к.т.н.</option>
+                            <option value="д.т.н.">д.т.н.</option>
+                            <option value="к.ф.-м.н.">к.ф.-м.н.</option>
+                            <option value="д.ф.-м.н.">д.ф.-м.н.</option>
+                        </select>
+                </div>
+
                     <div class="form-group">
-                        <label for="city">Город: <span class="required">*</span></label>
-                        <input type="text" id="city" placeholder="Введите город" required>
+                        <label for="title">Ученое звание:</label>
+                        <select id="title">
+                            <option value="">Нет</option>
+                            <option value="профессор">Профессор</option>
+                            <option value="доцент">Доцент</option>
+                            <option value="старший научный сотрудник">Старший научный сотрудник</option>
+                            <option value="научный сотрудник">Научный сотрудник</option>
+                        </select>
                     </div>
+
                     <div class="form-group">
-                        <label for="country">Страна: <span class="required">*</span></label>
-                        <input type="text" id="country" placeholder="Введите страну" required>
+                        <label for="field">Научное направление:</label>
+                        <input type="text" id="field" placeholder="Например: Информатика, Математика">
                     </div>
+
+                    <div class="form-group">
+                        <label for="department">Кафедра / отдел:</label>
+                        <input type="text" id="department" placeholder="Введите кафедру или отдел">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
+                            <label for="country">Страна: <span class="required">*</span></label>
+                            <select id="country" required>
+                                <option value="">Выберите страну</option>
+                                <option value="Россия">Россия</option>
+                                <option value="Беларусь">Беларусь</option>
+                                <option value="Казахстан">Казахстан</option>
+                                <option value="Украина">Украина</option>
+                                <option value="Другая">Другая</option>
+                            </select>
+                    </div>
+                        <div class="form-group" id="cityContainer">
+                            <label for="city">Город: <span class="required">*</span></label>
+                            <select id="city" required>
+                                <option value="">Выберите город</option>
+                            </select>
+                    </div>
+                </div>
+
+                    <div class="form-group">
                         <label for="postal">Почтовый индекс:</label>
                         <input type="text" id="postal" placeholder="Например: 119234">
                     </div>
+
                     <div class="form-group">
                         <label for="address">Адрес:</label>
                         <input type="text" id="address" placeholder="Введите полный адрес">
                     </div>
                 </div>
 
-                <div class="form-row">
+                <!-- TAB 3: Контакты -->
+                <div class="form-tab-content" id="tab3">
                     <div class="form-group">
                         <label for="workPhone">Рабочий телефон:</label>
                         <input type="text" id="workPhone" placeholder="Например: +7-495-123-45-67">
                     </div>
+
                     <div class="form-group">
                         <label for="homePhone">Домашний телефон:</label>
                         <input type="text" id="homePhone" placeholder="Например: +7-495-123-45-68">
                     </div>
                 </div>
 
+                <!-- TAB 4: Приглашение и Участие -->
+                <div class="form-tab-content" id="tab4">
                 <div class="form-group">
-                    <label for="email">Email: <span class="required">*</span></label>
-                    <input type="email" id="email" placeholder="example@mail.ru" required>
+                        <label>Статус: <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="role-speaker" name="role" value="speaker" required>
+                                <label for="role-speaker">Докладчик</label>
                 </div>
-
-                <div class="form-group">
-                    <label for="topic">Тема доклада:</label>
-                    <textarea id="topic" placeholder="Введите тему доклада"></textarea>
+                            <div class="radio-option">
+                                <input type="radio" id="role-participant" name="role" value="participant" required>
+                                <label for="role-participant">Участник</label>
+                            </div>
+                        </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="role">Участие: <span class="required">*</span></label>
-                        <select id="role" required>
-                            <option value="">Выберите...</option>
-                            <option value="speaker">Докладчик</option>
-                            <option value="participant">Участник</option>
-                        </select>
+                            <label for="inviteDate1">Дата 1-го приглашения:</label>
+                            <input type="date" id="inviteDate1">
                     </div>
                     <div class="form-group">
-                        <label for="feeAmount">Оргвзнос (руб.): <span class="required">*</span></label>
-                        <input type="number" id="feeAmount" min="0" placeholder="0" required>
+                            <label for="inviteDate2">Дата 2-го приглашения:</label>
+                            <input type="date" id="inviteDate2">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="feeDate">Дата уплаты оргвзноса: <span class="required">*</span></label>
-                    <input type="date" id="feeDate" required>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="inviteDate1">Дата рассылки 1-го приглашения:</label>
-                        <input type="date" id="inviteDate1">
-                    </div>
-                    <div class="form-group">
-                        <label for="inviteDate2">Дата рассылки 2-го приглашения:</label>
-                        <input type="date" id="inviteDate2">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
                         <label for="applicationDate">Дата поступления заявки:</label>
                         <input type="date" id="applicationDate">
+                </div>
+
+                    <div class="form-group">
+                        <label for="topic">Тема доклада:</label>
+                        <textarea id="topic" placeholder="Введите тему доклада"></textarea>
                     </div>
+
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
                             <input type="checkbox" id="thesis"> Тезисы получены
                         </label>
                     </div>
+
+                    <div class="form-group" id="thesisTextGroup" style="display: none;">
+                        <label for="thesisText">Текст тезисов:</label>
+                        <textarea id="thesisText" placeholder="Введите текст тезисов"></textarea>
+                    </div>
                 </div>
 
-                <div class="form-group" id="thesisTextGroup" style="display: none;">
-                    <label for="thesisText">Текст тезисов:</label>
-                    <textarea id="thesisText" placeholder="Введите текст тезисов"></textarea>
+                <!-- TAB 5: Финансы и Логистика -->
+                <div class="form-tab-content" id="tab5">
+                <div class="form-row">
+                    <div class="form-group">
+                            <label for="feeAmount">Размер взноса (руб.): <span class="required">*</span></label>
+                            <input type="number" id="feeAmount" min="0" placeholder="0" required>
+                    </div>
+                    <div class="form-group">
+                            <label for="feeDate">Дата взноса: <span class="required">*</span></label>
+                            <input type="date" id="feeDate" required>
+                    </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="arrivalDate">Дата приезда:</label>
+                            <label for="arrivalDate">Дата прибытия:</label>
                         <input type="date" id="arrivalDate">
                     </div>
                     <div class="form-group">
-                        <label for="departureDate">Дата отъезда:</label>
+                            <label for="departureDate">Дата убытия:</label>
                         <input type="date" id="departureDate">
                     </div>
                 </div>
 
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
                         <input type="checkbox" id="needsHotel"> Нужна гостиница
                     </label>
+                    </div>
                 </div>
 
-                <button type="submit">Добавить участника</button>
+                <!-- Кнопки навигации и отправки -->
+                <div style="display: flex; justify-content: space-between; margin-top: var(--space-24); gap: var(--space-12);">
+                    <button type="button" id="prevTab" style="display: none;">← Назад</button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" id="nextTab">Вперёд →</button>
+                    <button type="submit" id="submitBtn" style="display: none;">Добавить участника</button>
+                </div>
             </form>
 
             <h3 class="mt-20">Все участники</h3>
@@ -363,11 +423,239 @@
         // API Base URL
         const API_BASE = '/api';
 
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'info' ? 'ℹ' : '⚠';
+            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideInRight 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Loading spinner
+        function showLoading(show = true) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Управление табами формы
+        let currentTab = 1;
+        const totalTabs = 5;
+
+        function initFormTabs() {
+            const tabs = document.querySelectorAll('.form-tab');
+            const tabContents = document.querySelectorAll('.form-tab-content');
+            const prevBtn = document.getElementById('prevTab');
+            const nextBtn = document.getElementById('nextTab');
+            const submitBtn = document.getElementById('submitBtn');
+
+            tabs.forEach((tab, index) => {
+                tab.addEventListener('click', () => switchTab(index + 1));
+            });
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => switchTab(currentTab - 1));
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (validateCurrentTab()) {
+                        switchTab(currentTab + 1);
+                    }
+                });
+            }
+
+            updateTabButtons();
+        }
+
+        function switchTab(tabNumber) {
+            if (tabNumber < 1 || tabNumber > totalTabs) return;
+
+            // Скрыть текущий таб
+            document.querySelectorAll('.form-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.form-tab-content').forEach(content => content.classList.remove('active'));
+
+            // Показать выбранный таб
+            document.querySelector(`[data-tab="tab${tabNumber}"]`).classList.add('active');
+            document.getElementById(`tab${tabNumber}`).classList.add('active');
+
+            currentTab = tabNumber;
+            updateTabButtons();
+        }
+
+        function updateTabButtons() {
+            const prevBtn = document.getElementById('prevTab');
+            const nextBtn = document.getElementById('nextTab');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (prevBtn) {
+                prevBtn.style.display = currentTab > 1 ? 'block' : 'none';
+            }
+
+            if (nextBtn) {
+                nextBtn.style.display = currentTab < totalTabs ? 'block' : 'none';
+            }
+
+            if (submitBtn) {
+                submitBtn.style.display = currentTab === totalTabs ? 'block' : 'none';
+            }
+        }
+
+        function validateCurrentTab() {
+            const currentTabContent = document.getElementById(`tab${currentTab}`);
+            const requiredFields = currentTabContent.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('error');
+                    isValid = false;
+                } else {
+                    field.classList.remove('error');
+                }
+            });
+
+            // Специальная валидация для email
+            if (currentTab === 1) {
+                const emailField = document.getElementById('email');
+                if (emailField && emailField.value) {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(emailField.value)) {
+                        emailField.classList.add('error');
+                        showToast('Некорректный формат email', 'error');
+                        isValid = false;
+                    }
+                }
+            }
+
+            // Валидация radio для role
+            if (currentTab === 4) {
+                const roleSelected = document.querySelector('input[name="role"]:checked');
+                if (!roleSelected) {
+                    showToast('Выберите статус участия', 'error');
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                showToast('Заполните все обязательные поля', 'error');
+            }
+
+            return isValid;
+        }
+
+        // Валидация в реальном времени
+        function initRealTimeValidation() {
+            const form = document.getElementById('participantForm');
+            const inputs = form.querySelectorAll('input, select, textarea');
+
+            inputs.forEach(input => {
+                input.addEventListener('blur', () => {
+                    if (input.hasAttribute('required') && !input.value.trim()) {
+                        input.classList.add('error');
+                    } else {
+                        input.classList.remove('error');
+                    }
+                });
+
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('error') && input.value.trim()) {
+                        input.classList.remove('error');
+                    }
+                });
+            });
+
+            // Email валидация
+            const emailField = document.getElementById('email');
+            if (emailField) {
+                emailField.addEventListener('blur', () => {
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (emailField.value && !emailRegex.test(emailField.value)) {
+                        emailField.classList.add('error');
+                        showToast('Некорректный формат email', 'error');
+                    }
+                });
+            }
+        }
+
+        // Обновить список городов при выборе страны
+        async function initCountryCitySync() {
+            const countrySelect = document.getElementById('country');
+            const cityContainer = document.getElementById('city').parentElement;
+            let citySelect = document.getElementById('city');
+
+            if (countrySelect && citySelect) {
+                // Загрузить города при инициализации
+                await loadCitiesToSelect(citySelect);
+
+                countrySelect.addEventListener('change', async () => {
+                    const country = countrySelect.value;
+                    const currentValue = citySelect.value;
+                    
+                    if (country === 'Россия') {
+                        // Если это input, заменить на select
+                        if (citySelect.tagName === 'INPUT') {
+                            const newSelect = document.createElement('select');
+                            newSelect.id = 'city';
+                            newSelect.required = true;
+                            newSelect.className = citySelect.className;
+                            cityContainer.replaceChild(newSelect, citySelect);
+                            citySelect = newSelect;
+                        }
+                        await loadCitiesToSelect(citySelect);
+                    } else {
+                        // Для других стран - текстовое поле
+                        if (citySelect.tagName === 'SELECT') {
+                            const newInput = document.createElement('input');
+                            newInput.id = 'city';
+                            newInput.type = 'text';
+                            newInput.required = true;
+                            newInput.className = citySelect.className;
+                            newInput.placeholder = 'Введите город';
+                            if (currentValue) {
+                                newInput.value = currentValue;
+                            }
+                            cityContainer.replaceChild(newInput, citySelect);
+                            citySelect = newInput;
+                        }
+                    }
+                });
+            }
+        }
+
+        async function loadCitiesToSelect(selectElement) {
+            if (selectElement.tagName !== 'SELECT') return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/cities`);
+                if (response.ok) {
+                    const cities = await response.json();
+                    const currentValue = selectElement.value;
+                    selectElement.innerHTML = '<option value="">Выберите город</option>' +
+                        cities.map(c => `<option value="${c}">${c}</option>`).join('');
+                    if (currentValue) {
+                        selectElement.value = currentValue;
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки городов:', error);
+            }
+        }
+
         function showAlert(message, type = 'success') {
-            const alert = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
-            alert.textContent = message;
-            alert.classList.add('show');
-            setTimeout(() => alert.classList.remove('show'), 3000);
+            showToast(message, type);
         }
 
         function setVisibility(element, shouldShow) {
@@ -432,24 +720,24 @@
                 }
 
                 const invited = await response.json();
-                const statsDiv = document.getElementById('invitationStats');
-                statsDiv.innerHTML = `<div class="stat-card"><h3>Приглашено участников</h3><div class="value">${invited.length}</div></div>`;
+            const statsDiv = document.getElementById('invitationStats');
+            statsDiv.innerHTML = `<div class="stat-card"><h3>Приглашено участников</h3><div class="value">${invited.length}</div></div>`;
 
-                if (invited.length > 0) {
-                    const tbody = document.getElementById('invitationBody');
-                    tbody.innerHTML = invited.map(p => `
-                        <tr>
+            if (invited.length > 0) {
+                const tbody = document.getElementById('invitationBody');
+                tbody.innerHTML = invited.map(p => `
+                    <tr>
                             <td>${p.lastName} ${p.firstName} ${p.patronymic || ''}</td>
                             <td>${p.degree || '—'}</td>
-                            <td>${p.organization}</td>
-                            <td>${p.city}</td>
-                            <td>${p.email}</td>
-                        </tr>
-                    `).join('');
-                    setVisibility(document.getElementById('invitationTable'), true);
-                } else {
-                    setVisibility(document.getElementById('invitationTable'), false);
-                    statsDiv.innerHTML += '<p>Приглашений на эту дату не найдено</p>';
+                        <td>${p.organization}</td>
+                        <td>${p.city}</td>
+                        <td>${p.email}</td>
+                    </tr>
+                `).join('');
+                setVisibility(document.getElementById('invitationTable'), true);
+            } else {
+                setVisibility(document.getElementById('invitationTable'), false);
+                statsDiv.innerHTML += '<p>Приглашений на эту дату не найдено</p>';
                 }
             } catch (error) {
                 showAlert('Ошибка при загрузке данных', 'error');
@@ -463,14 +751,14 @@
                 if (!response.ok) throw new Error('Ошибка загрузки');
                 
                 const participants = await response.json();
-                const tbody = document.getElementById('participantsBody');
+            const tbody = document.getElementById('participantsBody');
                 tbody.innerHTML = participants.map(p => `
-                    <tr>
-                        <td>${p.lastName} ${p.firstName}</td>
-                        <td>${p.organization}</td>
-                        <td>${p.position}</td>
-                        <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
-                        <td>${p.email}</td>
+                <tr>
+                    <td>${p.lastName} ${p.firstName}</td>
+                    <td>${p.organization}</td>
+                    <td>${p.position}</td>
+                    <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
+                    <td>${p.email}</td>
                         <td>
                             <div style="display: flex; gap: 5px;">
                                 <button class="small secondary" onclick="showParticipantDetails(${p.id})">Подробнее</button>
@@ -478,10 +766,10 @@
                                 <button class="small danger" onclick="deleteParticipant(${p.id})">Удалить</button>
                             </div>
                         </td>
-                    </tr>
-                `).join('');
+                </tr>
+            `).join('');
 
-                // Update city selects
+            // Update city selects
                 await updateCitySelects();
             } catch (error) {
                 showAlert('Ошибка при загрузке участников', 'error');
@@ -505,39 +793,39 @@
                 
                 const participant = await response.json();
 
-                const details = [
-                    ['ФИО', `${participant.lastName} ${participant.firstName} ${participant.patronymic || ''}`.trim()],
-                    ['Ученая степень', participant.degree || '—'],
-                    ['Ученое звание', participant.title || '—'],
-                    ['Научное направление', participant.field || '—'],
-                    ['Место работы', participant.organization || '—'],
-                    ['Кафедра / отдел', participant.department || '—'],
-                    ['Должность', participant.position || '—'],
-                    ['Страна / город', `${participant.country || '—'} / ${participant.city || '—'}`],
-                    ['Почтовый индекс', participant.postal || '—'],
-                    ['Адрес', participant.address || '—'],
-                    ['Рабочий телефон', participant.workPhone || '—'],
-                    ['Домашний телефон', participant.homePhone || '—'],
-                    ['Email', participant.email || '—'],
-                    ['Тип участия', participant.role === 'speaker' ? 'Докладчик' : 'Участник'],
-                    ['Тема доклада', participant.topic || '—'],
-                    ['Дата 1-го приглашения', participant.inviteDate1 || '—'],
-                    ['Дата 2-го приглашения', participant.inviteDate2 || '—'],
-                    ['Дата заявки', participant.applicationDate || '—'],
-                    ['Тезисы получены', participant.thesis ? 'Да' : 'Нет'],
+            const details = [
+                ['ФИО', `${participant.lastName} ${participant.firstName} ${participant.patronymic || ''}`.trim()],
+                ['Ученая степень', participant.degree || '—'],
+                ['Ученое звание', participant.title || '—'],
+                ['Научное направление', participant.field || '—'],
+                ['Место работы', participant.organization || '—'],
+                ['Кафедра / отдел', participant.department || '—'],
+                ['Должность', participant.position || '—'],
+                ['Страна / город', `${participant.country || '—'} / ${participant.city || '—'}`],
+                ['Почтовый индекс', participant.postal || '—'],
+                ['Адрес', participant.address || '—'],
+                ['Рабочий телефон', participant.workPhone || '—'],
+                ['Домашний телефон', participant.homePhone || '—'],
+                ['Email', participant.email || '—'],
+                ['Тип участия', participant.role === 'speaker' ? 'Докладчик' : 'Участник'],
+                ['Тема доклада', participant.topic || '—'],
+                ['Дата 1-го приглашения', participant.inviteDate1 || '—'],
+                ['Дата 2-го приглашения', participant.inviteDate2 || '—'],
+                ['Дата заявки', participant.applicationDate || '—'],
+                ['Тезисы получены', participant.thesis ? 'Да' : 'Нет'],
                     ['Текст тезисов', participant.thesisText || '—'],
-                    ['Оргвзнос (руб.)', participant.feeAmount ? participant.feeAmount.toLocaleString('ru-RU') : '—'],
-                    ['Дата уплаты оргвзноса', participant.feeDate || '—'],
-                    ['Дата приезда', participant.arrivalDate || '—'],
-                    ['Дата отъезда', participant.departureDate || '—'],
-                    ['Потребность в гостинице', participant.needsHotel ? 'Нужна' : 'Не нужна']
-                ];
+                ['Оргвзнос (руб.)', participant.feeAmount ? participant.feeAmount.toLocaleString('ru-RU') : '—'],
+                ['Дата уплаты оргвзноса', participant.feeDate || '—'],
+                ['Дата приезда', participant.arrivalDate || '—'],
+                ['Дата отъезда', participant.departureDate || '—'],
+                ['Потребность в гостинице', participant.needsHotel ? 'Нужна' : 'Не нужна']
+            ];
 
-                document.getElementById('participantDetails').innerHTML = `
-                    ${details.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join('')}
-                `;
+            document.getElementById('participantDetails').innerHTML = `
+                ${details.map(([label, value]) => `<p><strong>${label}:</strong> ${value}</p>`).join('')}
+            `;
 
-                toggleParticipantModal(true);
+            toggleParticipantModal(true);
             } catch (error) {
                 showAlert('Ошибка при загрузке данных участника', 'error');
                 console.error(error);
@@ -550,15 +838,15 @@
                 if (!response.ok) throw new Error('Ошибка загрузки');
                 
                 const cities = await response.json();
-                ['reportCity', 'hotelCity', 'feeCity'].forEach(id => {
-                    const select = document.getElementById(id);
-                    if (select) {
-                        const current = select.value;
-                        select.innerHTML = '<option value="">Все города</option>' + 
-                            cities.map(c => `<option value="${c}">${c}</option>`).join('');
-                        select.value = current;
-                    }
-                });
+            ['reportCity', 'hotelCity', 'feeCity'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    const current = select.value;
+                    select.innerHTML = '<option value="">Все города</option>' + 
+                        cities.map(c => `<option value="${c}">${c}</option>`).join('');
+                    select.value = current;
+                }
+            });
             } catch (error) {
                 console.error('Ошибка при загрузке городов:', error);
             }
@@ -582,13 +870,14 @@
                 department: document.getElementById('department').value,
                 position: document.getElementById('position').value,
                 country: document.getElementById('country').value,
-                city: document.getElementById('city').value,
+                city: (document.getElementById('city').tagName === 'SELECT' || document.getElementById('city').tagName === 'INPUT') 
+                    ? document.getElementById('city').value : '',
                 postal: document.getElementById('postal').value,
                 address: document.getElementById('address').value,
                 workPhone: document.getElementById('workPhone').value,
                 homePhone: document.getElementById('homePhone').value,
                 email: document.getElementById('email').value,
-                role: document.getElementById('role').value,
+                role: document.querySelector('input[name="role"]:checked')?.value || '',
                 topic: document.getElementById('topic').value,
                 inviteDate1: document.getElementById('inviteDate1').value,
                 applicationDate: document.getElementById('applicationDate').value,
@@ -609,6 +898,9 @@
                 return;
             }
 
+            showLoading(true);
+            showToast('Форма сохраняется...', 'info');
+
             try {
                 const response = await fetch(`${API_BASE}/participants`, {
                     method: 'POST',
@@ -616,17 +908,21 @@
                     body: JSON.stringify(newParticipant)
                 });
 
+                showLoading(false);
+
                 if (!response.ok) {
                     const error = await response.json();
-                    showAlert(error.error || 'Ошибка при добавлении участника', 'error');
+                    showToast(error.error || 'Ошибка при добавлении участника', 'error');
                     return;
                 }
-
-                this.reset();
+            
+            this.reset();
+                switchTab(1); // Вернуться на первый таб
                 await updateParticipantsTable();
-                showAlert('Участник успешно добавлен');
+                showToast('Участник добавлен!', 'success');
             } catch (error) {
-                showAlert('Ошибка при добавлении участника', 'error');
+                showLoading(false);
+                showToast('Ошибка при добавлении участника', 'error');
                 console.error(error);
             }
         });
@@ -637,23 +933,23 @@
                 if (!response.ok) throw new Error('Ошибка загрузки');
                 
                 const withFees = await response.json();
-                const tbody = document.getElementById('feesConfirmedBody');
-                
-                tbody.innerHTML = withFees.map(p => {
-                    const pending = isFutureDate(p.feeDate);
-                    const statusClass = pending ? 'status-pending' : 'status-confirmed';
-                    const statusLabel = pending ? 'В ожидании' : '✓ Оплачено';
+            const tbody = document.getElementById('feesConfirmedBody');
+            
+            tbody.innerHTML = withFees.map(p => {
+                const pending = isFutureDate(p.feeDate);
+                const statusClass = pending ? 'status-pending' : 'status-confirmed';
+                const statusLabel = pending ? 'В ожидании' : '✓ Оплачено';
 
-                    return `
-                        <tr>
-                            <td>${p.lastName} ${p.firstName}</td>
-                            <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
-                            <td>${formatDate(p.feeDate)}</td>
-                            <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
-                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                        </tr>
-                    `;
-                }).join('');
+                return `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
+                        <td>${formatDate(p.feeDate)}</td>
+                        <td>${p.role === 'speaker' ? 'Докладчик' : 'Участник'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                    </tr>
+                `;
+            }).join('');
             } catch (error) {
                 showAlert('Ошибка при загрузке оргвзносов', 'error');
                 console.error(error);
@@ -683,22 +979,22 @@
                 }
 
                 const filtered = await response.json();
-                const table = document.getElementById('feesPeriodTable');
-                const tbody = document.getElementById('feesPeriodBody');
+            const table = document.getElementById('feesPeriodTable');
+            const tbody = document.getElementById('feesPeriodBody');
 
-                if (filtered.length > 0) {
-                    tbody.innerHTML = filtered.map(p => `
-                        <tr>
-                            <td>${p.lastName} ${p.firstName}</td>
-                            <td>${p.city}</td>
-                            <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
-                            <td>${formatDate(p.feeDate)}</td>
-                        </tr>
-                    `).join('');
-                    setVisibility(table, true);
-                } else {
-                    setVisibility(table, false);
-                    showAlert('Платежей в указанном периоде не найдено', 'error');
+            if (filtered.length > 0) {
+                tbody.innerHTML = filtered.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.city}</td>
+                        <td>${p.feeAmount.toLocaleString('ru-RU')}</td>
+                        <td>${formatDate(p.feeDate)}</td>
+                    </tr>
+                `).join('');
+                setVisibility(table, true);
+            } else {
+                setVisibility(table, false);
+                showAlert('Платежей в указанном периоде не найдено', 'error');
                 }
             } catch (error) {
                 showAlert('Ошибка при поиске платежей', 'error');
@@ -708,7 +1004,7 @@
 
         async function generateCityReport() {
             const city = document.getElementById('reportCity').value;
-
+            
             try {
                 const response = await fetch(`${API_BASE}/reports/thesis`, {
                     method: 'POST',
@@ -723,23 +1019,23 @@
                 }
 
                 const filtered = await response.json();
-                const table = document.getElementById('cityReportTable');
-                const tbody = document.getElementById('cityReportBody');
+            const table = document.getElementById('cityReportTable');
+            const tbody = document.getElementById('cityReportBody');
 
-                if (filtered.length > 0) {
-                    tbody.innerHTML = filtered.map(p => `
-                        <tr>
-                            <td>${p.lastName} ${p.firstName}</td>
-                            <td>${p.city}</td>
-                            <td>${p.organization}</td>
+            if (filtered.length > 0) {
+                tbody.innerHTML = filtered.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.city}</td>
+                        <td>${p.organization}</td>
                             <td>${p.topic || '—'}</td>
                             <td>${p.thesisText || '—'}</td>
-                        </tr>
-                    `).join('');
-                    setVisibility(table, true);
-                } else {
-                    setVisibility(table, false);
-                    showAlert('Тезисов не найдено', 'error');
+                    </tr>
+                `).join('');
+                setVisibility(table, true);
+            } else {
+                setVisibility(table, false);
+                showAlert('Тезисов не найдено', 'error');
                 }
             } catch (error) {
                 showAlert('Ошибка при генерации отчета', 'error');
@@ -749,7 +1045,7 @@
 
         async function generateHotelReport() {
             const city = document.getElementById('hotelCity').value;
-
+            
             try {
                 const response = await fetch(`${API_BASE}/reports/hotel`, {
                     method: 'POST',
@@ -764,22 +1060,22 @@
                 }
 
                 const filtered = await response.json();
-                const table = document.getElementById('hotelReportTable');
-                const tbody = document.getElementById('hotelReportBody');
+            const table = document.getElementById('hotelReportTable');
+            const tbody = document.getElementById('hotelReportBody');
 
-                if (filtered.length > 0) {
-                    tbody.innerHTML = filtered.map(p => `
-                        <tr>
-                            <td>${p.lastName} ${p.firstName}</td>
-                            <td>${p.city}</td>
-                            <td>${p.organization}</td>
-                            <td>${p.email}</td>
-                        </tr>
-                    `).join('');
-                    setVisibility(table, true);
-                } else {
-                    setVisibility(table, false);
-                    showAlert('Запросов на проживание не найдено', 'error');
+            if (filtered.length > 0) {
+                tbody.innerHTML = filtered.map(p => `
+                    <tr>
+                        <td>${p.lastName} ${p.firstName}</td>
+                        <td>${p.city}</td>
+                        <td>${p.organization}</td>
+                        <td>${p.email}</td>
+                    </tr>
+                `).join('');
+                setVisibility(table, true);
+            } else {
+                setVisibility(table, false);
+                showAlert('Запросов на проживание не найдено', 'error');
                 }
             } catch (error) {
                 showAlert('Ошибка при генерации отчета', 'error');
@@ -966,21 +1262,26 @@
                 return;
             }
 
+            showLoading(true);
+
             try {
                 const response = await fetch(`${API_BASE}/participants/${id}`, {
                     method: 'DELETE'
                 });
 
+                showLoading(false);
+
                 if (!response.ok) {
                     const error = await response.json();
-                    showAlert(error.error || 'Ошибка при удалении участника', 'error');
+                    showToast(error.error || 'Ошибка при удалении участника', 'error');
                     return;
                 }
 
                 await updateParticipantsTable();
-                showAlert('Участник успешно удален');
+                showToast('Участник успешно удален', 'success');
             } catch (error) {
-                showAlert('Ошибка при удалении участника', 'error');
+                showLoading(false);
+                showToast('Ошибка при удалении участника', 'error');
                 console.error(error);
             }
         }
@@ -1064,8 +1365,13 @@
             }
         });
 
-        // Initial display
-        updateParticipantsTable();
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', async () => {
+            initFormTabs();
+            initRealTimeValidation();
+            await initCountryCitySync();
+            await updateParticipantsTable();
+        });
     </script>
 </body>
 </html>
